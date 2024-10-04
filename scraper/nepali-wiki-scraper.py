@@ -25,6 +25,9 @@ data = []
 
 for i, url in enumerate(urls):
     text = scrape_wikipedia_page(url)
+    #something like if a particular section of a text gets too long like sepearte that from the next sentence how does that sound? 
+    if len(text)> 1000:
+
     data.append({'ID': i + 1, 'Text': text})
 
 # Convert to DataFrame
