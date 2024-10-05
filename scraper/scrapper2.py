@@ -1,3 +1,5 @@
+# For microsoft edge
+
 from selenium import webdriver
 from selenium.webdriver.edge.service import Service
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
@@ -17,8 +19,11 @@ driver.get(url)
 
 p_tags = driver.find_elements(By.TAG_NAME, 'p')
 
+
 # Open CSV file to write the data
+
 with open('All Scraoed Data.csv', mode='a', newline='', encoding='utf-8') as file:
+
     writer = csv.writer(file)
     writer.writerow([ 'Text Content'])  # Header row
 
