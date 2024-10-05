@@ -16,13 +16,13 @@ url = "https://ne.wikipedia.org/wiki/%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%BE%E0%A4%
 driver.get(url)
 
 
-
+  
 p_tags = driver.find_elements(By.TAG_NAME, 'p')
 
 
 # Open CSV file to write the data
 
-with open('All Scraoed Data.csv', mode='a', newline='', encoding='utf-8') as file:
+with open('All Scraped Data.csv', mode='a', newline='', encoding='utf-8') as file:
 
     writer = csv.writer(file)
     writer.writerow([ 'Text Content'])  # Header row
