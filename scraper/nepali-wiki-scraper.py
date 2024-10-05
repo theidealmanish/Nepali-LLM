@@ -1,39 +1,68 @@
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+import csv
+import time
+import logging
+from selenium.common.exceptions import StaleElementReferenceException
 
-# Function to scrape a single Wikipedia page
-def scrape_wikipedia_page(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('selenium')
 
-    # Extract the main content (usually in <p> tags)
-    paragraphs = soup.find_all('p')
-    text = ' '.join([para.get_text() for para in paragraphs])
+# Set up Selenium WebDriver for Google Chrome using ChromeDriverManager
+service = Service(ChromeDriverManager().install())
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument('--remote-debugging-port=9222')
 
-    return text.strip()
+# Initialize the WebDriver
+driver = webdriver.Chrome(service=service, options=options)
 
-# List of URLs to scrape (you can add more)
-urls = [
-    'https://ne.wikipedia.org/wiki/नेपाल',
-    'https://ne.wikipedia.org/wiki/काठमाडौं',
-    'https://ne.wikipedia.org/wiki/नेपालको_संस्कृति'
-]
-
-# Create a DataFrame to store the results
+visited_urls = set()
 data = []
 
-for i, url in enumerate(urls):
-    text = scrape_wikipedia_page(url)
-    #something like if a particular section of a text gets too long like sepearte that from the next sentence how does that sound? 
-    if len(text)> 1000:
+def crawl(url):
+    try:
+        # Visit the URL
+        driver.get(url)
+        time.sleep(2)  # Wait for the page to load
 
-    data.append({'ID': i + 1, 'Text': text})
+        # Extract the full page content
+        page_content = driver.find_element(By.TAG_NAME, 'body').text.strip()
+        data.append((len(data) + 1, page_content))  # ID and content
 
-# Convert to DataFrame
-df = pd.DataFrame(data)
+        # Find all <a> tags on the page
+        a_tags = driver.find_elements(By.TAG_NAME, 'a')
 
-# Save to CSV
-df.to_csv('nepali_wikipedia_data.csv', index=False, encoding='utf-8-sig')
+        for a_tag in a_tags:
+            link = a_tag.get_attribute('href')
+            text = a_tag.text.strip()
 
-print("Data has been scraped and saved to nepali_wikipedia_data.csv")
+            # Check if the link is valid and not visited yet
+            if link and link.startswith("https://ne.wikipedia.org/wiki/") and link not in visited_urls:
+                visited_urls.add(link)  # Mark this URL as visited
+                
+                # Recursively crawl the new link
+                crawl(link)
+
+    except StaleElementReferenceException:
+        logger.warning("StaleElementReferenceException caught. Retrying...")
+        crawl(url)  # Retry crawling the same URL
+
+# Start crawling from the Nepali Wikipedia main page
+start_url = "https://ne.wikipedia.org/wiki/"
+crawl(start_url)
+
+# Write collected data to CSV file
+with open('./data/data.csv', mode='w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    writer.writerow(['ID', 'Text'])  # Header row
+    writer.writerows(data)  # Write all collected data
+
+# Close the WebDriver
+driver.quit()
