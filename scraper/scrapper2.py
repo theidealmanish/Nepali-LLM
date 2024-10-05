@@ -16,15 +16,15 @@ driver.get(url)
 p_tags = driver.find_elements(By.TAG_NAME, 'p')
 
 # Open CSV file to write the data
-with open('scraped_data.csv', mode='w', newline='', encoding='utf-8') as file:
+with open('All Scraoed Data.csv', mode='w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
-    writer.writerow(['Tag Type', 'Text Content', 'URL or Other Info'])  # Header row
+    writer.writerow([ 'Text Content'])  # Header row
 
    
    
     # Write data from <p> tags
     for p_tag in p_tags:
-        writer.writerow([ p_tag.text, 'N/A'])
+        writer.writerow([ p_tag.text,])
 
 # Close the WebDriver
 driver.quit()
