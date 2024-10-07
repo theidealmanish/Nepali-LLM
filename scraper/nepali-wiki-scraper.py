@@ -59,7 +59,7 @@ start_url = "https://ne.wikipedia.org/wiki/"
 crawl(start_url)
 
 # Write collected data to CSV file
-with open('./data/data.csv', mode='w', newline='', encoding='utf-8') as file:
+with open('./data/data2.csv', mode='w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
     writer.writerow(['ID', 'Text'])  # Header row
     writer.writerows(data)  # Write all collected data
