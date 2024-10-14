@@ -1,59 +1,102 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import pandas as pd
+from bs4 import BeautifulSoup
+import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import csv
-import logging
-from selenium.common.exceptions import StaleElementReferenceException  # {{ edit_1 }}
 
+chrome_options = Options()
+# chrome_options.add_argument("--headless")  # Commented out to display the browser
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+# Optional: Set window size for better visibility
+chrome_options.add_argument("window-size=1200,600")
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('selenium')
-
-# Set up Selenium WebDriver for Google Chrome using ChromeDriverManager
 service = Service(ChromeDriverManager().install())
-options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-dev-shm-usage')
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# Initialize the WebDriver
-driver = webdriver.Chrome(service=service, options=options)
+wiki_url = "https://ne.wikipedia.org/wiki/"
 
-visited_urls = set()
-data = []
+try:
+    driver.get(wiki_url)
 
-def crawl(url):
-    visited_urls.add(url)  # Mark this URL as visited
-    driver.get(url)
+    # Wait until the page is fully loaded
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.TAG_NAME, "a"))
+    )
 
-    # Wait for the page to load and body tag to be present
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+    # Collect all valid links first to avoid stale elements
+    a_tags = driver.find_elements(By.TAG_NAME, "a")
     
-    # Extract the full page content
-    page_content = driver.find_element(By.TAG_NAME, 'body').text.strip()
-    data.append((len(data) + 1, page_content))  # ID and content
+    # Helper function to detect if text is entirely Nepali
+    def is_fully_nepali(text):
+        for char in text:
+            if not ('\u0900' <= char <= '\u097F' or char.isspace() or char in ['।', '॥', ',', '.', '!', '?', '॥']):
+                return False
+        return len(text) > 0  # Ensure that text is not empty
 
-    # Find all <a> tags on the page
-    a_tags = driver.find_elements(By.TAG_NAME, 'a')
-
-    for a_tag in a_tags[:5]:
+    # Extract unique Nepali links
+    links = []
+    for a_tag in a_tags:
         link = a_tag.get_attribute('href')
-      
+        text = a_tag.text.strip()
 
-# Start crawling from the Nepali Wikipedia main page
-start_url = "https://www.onlinekhabar.com"
-crawl(start_url)
+        if link and 'ne.wikipedia.org/wiki/' in link and is_fully_nepali(text):
+            if link not in links:
+                links.append(link)
 
-# Write collected data to CSV file
-with open('../data/data.csv', mode='w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    writer.writerow(['ID', 'Text'])  # Header row
-    writer.writerows(data)  # Write all collected data
+    data = []
+    visited_links = set()
+    serial_no = 1
 
+    for link in links:
+        if link in visited_links:
+            continue
+        visited_links.add(link)
 
-# Close the WebDriver
-driver.quit()
+        try:
+            driver.get(link)
+            
+            # Wait until the content is loaded
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, "p"))
+            )
+
+            # Scrape the article content
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            paragraphs = soup.find_all('p')
+            article_text = " ".join([
+                p.get_text(strip=True) 
+                for p in paragraphs 
+                if is_fully_nepali(p.get_text(strip=True))
+            ])
+
+            if article_text:  # Ensure there's some Nepali text
+                data.append({
+                    "Id": serial_no,
+                    "Article Link": link,
+                    "Text": article_text
+                })
+                serial_no += 1
+
+        except Exception as e:
+            print(f"Error processing {link}: {e}")
+            continue
+
+    # Convert the data to a DataFrame
+    df = pd.DataFrame(data)
+
+    # Save to CSV with UTF-8 encoding to handle Nepali characters
+    df.to_csv("nepali_wikipedia_articles.csv", index=False, encoding='utf-8')
+
+    print("Scraping completed successfully.")
+
+except Exception as main_e:
+    print(f"An error occurred: {main_e}")
+
+finally:
+    driver.quit()
