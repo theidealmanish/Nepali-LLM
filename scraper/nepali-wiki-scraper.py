@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from collections import deque
 
 chrome_options = Options()
 # chrome_options.add_argument("--headless")  # Commented out to display the browser
@@ -19,7 +20,7 @@ chrome_options.add_argument("window-size=1200,600")
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
-wiki_url = "https://ne.wikipedia.org/wiki/"
+wiki_url = "https://ne.wikipedia.org/wiki/Main_Page"  # Use the main page as the starting point
 
 try:
     driver.get(wiki_url)
@@ -29,71 +30,76 @@ try:
         EC.presence_of_element_located((By.TAG_NAME, "a"))
     )
 
-    # Collect all valid links first to avoid stale elements
-    a_tags = driver.find_elements(By.TAG_NAME, "a")
-    
-    # Helper function to detect if text is entirely Nepali
-    def is_fully_nepali(text):
+    def is_nepali(text):
         for char in text:
             if not ('\u0900' <= char <= '\u097F' or char.isspace() or char in ['।', '॥', ',', '.', '!', '?', '॥']):
                 return False
-        return len(text) > 0  # Ensure that text is not empty
+        return len(text) > 0 
 
-    # Extract unique Nepali links
+    # Extract initial set of unique Nepali links from the main page
+    a_tags = driver.find_elements(By.TAG_NAME, "a")
     links = []
     for a_tag in a_tags:
         link = a_tag.get_attribute('href')
         text = a_tag.text.strip()
 
-        if link and 'ne.wikipedia.org/wiki/' in link and is_fully_nepali(text):
+        if link and 'ne.wikipedia.org/wiki/' in link and is_nepali(text):
             if link not in links:
                 links.append(link)
 
+    max_articles = 5000 
     data = []
-    visited_links = set()
+    visited_links = set(links)  
+    queue = deque(links)
     serial_no = 1
 
-    for link in links:
-        if link in visited_links:
-            continue
-        visited_links.add(link)
+    while queue and len(data) < max_articles:
+        current_link = queue.popleft() # this is the implementation of a bfs , webcrawler to be precise. 
 
         try:
-            driver.get(link)
-            
+            driver.get(current_link)
+
             # Wait until the content is loaded
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.TAG_NAME, "p"))
             )
 
-            # Scrape the article content
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             paragraphs = soup.find_all('p')
             article_text = " ".join([
                 p.get_text(strip=True) 
                 for p in paragraphs 
-                if is_fully_nepali(p.get_text(strip=True))
+                if is_nepali(p.get_text(strip=True))
             ])
 
             if article_text:  # Ensure there's some Nepali text
                 data.append({
                     "Id": serial_no,
-                    "Article Link": link,
+                    "Article Link": current_link,
                     "Text": article_text
                 })
                 serial_no += 1
 
+            new_a_tags = soup.find_all('a', href=True)
+            for a in new_a_tags:
+                href = a['href']
+                if href.startswith("/wiki/") and not any(prefix in href for prefix in [":", "#"]):
+                    full_link = "https://ne.wikipedia.org" + href
+                    # Check if the link hasn't been visited and is not already in the queue
+                    if full_link not in visited_links:
+                        # Optionally, add a condition to filter links based on title or other criteria
+                        visited_links.add(full_link)
+                        queue.append(full_link)
+
         except Exception as e:
-            print(f"Error processing {link}: {e}")
+            print(f"Error processing {current_link}: {e}")
             continue
 
-    # Convert the data to a DataFrame
     df = pd.DataFrame(data)
 
-    # Save to CSV with UTF-8 encoding to handle Nepali characters
     df.to_csv("nepali_wikipedia_articles.csv", index=False, encoding='utf-8')
 
-    print("Scraping completed successfully.")
+    print(f"Scraping completed successfully. {len(data)} articles saved.")
 
 except Exception as main_e:
     print(f"An error occurred: {main_e}")
