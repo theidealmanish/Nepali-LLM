@@ -97,6 +97,7 @@ try:
 
     df = pd.DataFrame(data)
 
+    #need to update this path. this file is inside "data" folder rn.
     df.to_csv("nepali_wikipedia_articles.csv", index=False, encoding='utf-8')
 
     print(f"Scraping completed successfully. {len(data)} articles saved.")
