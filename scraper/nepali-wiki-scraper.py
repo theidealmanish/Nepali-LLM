@@ -47,7 +47,7 @@ try:
             if link not in links:
                 links.append(link)
 
-    max_articles = 5000 
+    max_articles = 10000 
     data = []
     visited_links = set(links)  
     queue = deque(links)
