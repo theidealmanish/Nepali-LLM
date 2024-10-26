@@ -1,3 +1,5 @@
+##Used to scrape the 10000 Nepali wikipedia articles. 
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -20,7 +22,7 @@ chrome_options.add_argument("window-size=1200,600")
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
-wiki_url = "https://ne.wikipedia.org/wiki/Main_Page"  # Use the main page as the starting point
+wiki_url = "https://ne.wikipedia.org/wiki/Main_Page"  
 
 try:
     driver.get(wiki_url)
@@ -66,13 +68,9 @@ try:
 
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             paragraphs = soup.find_all('p')
-            article_text = " ".join([
-                p.get_text(strip=True) 
-                for p in paragraphs 
-                if is_nepali(p.get_text(strip=True))
-            ])
+            article_text = " ".join([p.get_text(strip=True) for p in paragraphs if is_nepali(p.get_text(strip=True))]) # this is to ensure that we are only getting nepali text.
 
-            if article_text:  # Ensure there's some Nepali text
+            if article_text:  
                 data.append({
                     "Id": serial_no,
                     "Article Link": current_link,
