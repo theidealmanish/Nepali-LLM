@@ -52,9 +52,10 @@ def train_sentencepiece_tokenizer(input_file, model_prefix, vocab_size=32000, mo
     print(f"Tokenizer trained with prefix '{model_prefix}'.")
 
 
+merged_corpus_path = "C:/Users/L E G I O N/Desktop/Nepali-LLM/data/merged_nepali_corpus.txt" 
 
-merged_corpus_path = "../data/merged_nepali_corpus.txt" 
-tokenizer_model_prefix = "../data/nepali_tokenizer"     
+
+tokenizer_model_prefix = "C:/Users/L E G I O N/Desktop/Nepali-LLM/data/nepali_tokenizer_2"     
 vocab_size = 64000
 model_type = 'bpe'
 
@@ -63,7 +64,7 @@ dataset = load_dataset('text', data_files={'train': merged_corpus_path})
 
 chunked_dataset = prepare_chunks(dataset['train'])
 
-chunked_file_path = "../data/chunked_nepali_corpus.txt" # ensuring equal length of chunks for training the tokenizer.
+chunked_file_path = "C:/Users/L E G I O N/Desktop/Nepali-LLM/data/chunked_nepali_corpus_samir.txt" # ensuring equal length of chunks for training the tokenizer.
 
 with open(chunked_file_path, 'w', encoding='utf-8') as f:
     for chunk in chunked_dataset:
