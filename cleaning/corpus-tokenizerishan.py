@@ -54,7 +54,7 @@ def train_sentencepiece_tokenizer(input_file, model_prefix, vocab_size=32000, mo
 
 
 
-merged_corpus_path = "../data/merged_nepali_corpus.txt" 
+merged_corpus_path = "/data/merged_nepali_corpus.txt" 
 tokenizer_model_prefix = "../data/nepali_tokenizer"     
 vocab_size = 64000
 model_type = 'bpe'

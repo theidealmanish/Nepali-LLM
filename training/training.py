@@ -14,7 +14,7 @@ embed_dim = 256
 num_layers = 2
 num_heads = 4
 sequence_length = 128
-batch_size = 4  # Reduced batch size to work with limited data
+batch_size = 1  # Reduced batch size to work with limited data
 num_epochs = 3
 learning_rate = 1e-4
 
@@ -92,7 +92,7 @@ def answer_question(question, max_length=50):
     return answer
 
 # Test the model with a question
-question = "What is this model about?"
+question = "नेपालको राजधानी कहाँ हो?"
 print("Question:", question)
 answer = answer_question(question)
 print("Answer:", answer)
