@@ -6,7 +6,7 @@ import random
 
 # Load SentencePiece tokenizer
 sp = spm.SentencePieceProcessor()
-sp.load("C:/Users/L E G I O N/Desktop/Nepali-LLM/data/nepali_tokenizer.model")
+sp.load("C:/Users/L E G I O N/Desktop/Nepali-LLM/data/your_model.model")
 
 # Parameters
 vocab_size = sp.get_piece_size()
