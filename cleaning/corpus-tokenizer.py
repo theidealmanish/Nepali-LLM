@@ -10,7 +10,7 @@ def split_text_into_chunks(text, chunk_size=256, stride=128):
     num_chars = len(cleaned_text)
 
     # Split the cleaned text into chunks with overlap (stride)
-    for i in range(0, num_chars, chunk_size - stride):
+    for i in range(0,    num_chars, chunk_size - stride):
         chunk = cleaned_text[i:i + chunk_size]
         if chunk:  # Ensure the chunk is not empty
             chunks.append(chunk)

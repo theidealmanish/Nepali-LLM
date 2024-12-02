@@ -11,4 +11,7 @@ filename = "C:/Users/L E G I O N/Desktop/Nepali-LLM/data/merged_nepali_corpus.tx
 if is_utf8_file(filename):
     print("The file is UTF-8 encoded")
 else:
+
+
     print("The file is not UTF-8 encoded")
+    
