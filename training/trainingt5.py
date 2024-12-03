@@ -16,7 +16,7 @@ model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
 # Parameters
 sequence_length = 128
-batch_size = 1
+batch_size = 32
 num_epochs = 3
 learning_rate = 1e-4
 
