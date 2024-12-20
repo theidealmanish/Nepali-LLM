@@ -37,6 +37,7 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.CrossEntropyLoss()
 
 # Prepare the dataset (example with dummy text)
+
 text = "This is some sample text for training the language model. This model will try to predict the next words."
 token_ids = sp.encode(text, out_type=int)
 train_data = [token_ids[i:i + sequence_length] for i in range(0, len(token_ids) - sequence_length, sequence_length)]
