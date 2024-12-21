@@ -18,7 +18,7 @@ model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 sequence_length = 128
 batch_size = 32
 num_epochs = 3
-learning_rate = 1e-4
+learning_rate = 8
 
 # Sample dataset (use your actual Nepali text here)
 text = "This is a sample text for training. Modify this with your actual Nepali text."
