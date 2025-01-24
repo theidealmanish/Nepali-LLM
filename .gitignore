@@ -1,5 +1,2 @@
-myenv
-
-
-data/ne.txt
-
+/venv/
+.DS_Store
